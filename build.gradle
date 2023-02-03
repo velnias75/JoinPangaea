@@ -1,0 +1,50 @@
+plugins {
+	id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+apply from: 'private.gradle'
+
+repositories {
+	mavenLocal()	
+	mavenCentral()
+}
+
+application {
+    mainClass = 'de.rangun.joinpangaea.JoinPangaeaApp'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+	implementation "com.google.code.gson:gson:${project.gson_version}"
+	shadow("com.google.code.gson:gson:${project.gson_version}");
+}
+
+processResources {
+	inputs.property "apiKeySecret", CurseforgeAPIKey
+
+	filesMatching("api.json") {
+		expand "apiKey": CurseforgeAPIKey
+	}
+}
+
+shadowJar {
+    minimize()
+}
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'de.rangun.joinpangaea.JoinPangaeaApp'
+    )
+  }
+}
