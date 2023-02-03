@@ -37,11 +37,23 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -384,7 +396,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 				installingFuture = CompletableFuture.runAsync(new Runnable() {
 
 					@Override
-					public void run() {
+					public void run() { // NOPMD by heiko on 03.02.23, 13:10
 
 						quitButton.setEnabled(false);
 
@@ -410,7 +422,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 							currentActionLabel.setText("Installiere …");
 
 							currentProgress.setMinimum(0);
-							currentProgress.setMaximum(modList.size());
+							currentProgress.setMaximum(modList.size() + 1);
 
 							modList.forEach(mod -> {
 
@@ -441,7 +453,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 
 									} catch (IOException e) {
 
-										error(e);
+										error("Fehler beim Herunterladen: " + e); // NOPMD by heiko on 03.02.23, 13:06
 										hasError[0] = 1;
 										throw new CompletionException(e);
 
@@ -457,6 +469,82 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 								currentProgress.setValue(currentProgress.getValue() + 1);
 
 							});
+
+							appendDetail("\nErzeuge Mod-Konfiguration …");
+
+							URI resource;
+
+							try {
+
+								resource = getClass().getResource("").toURI();
+
+								try (FileSystem fileSystem = FileSystems.newFileSystem(resource,
+										Collections.<String, String>emptyMap(),
+										Thread.currentThread().getContextClassLoader())) {
+
+									final Path jarPath = fileSystem.getPath("/config");
+
+									Files.walkFileTree(jarPath, new SimpleFileVisitor<Path>() {
+
+										private Path currentTarget;
+
+										@Override
+										public FileVisitResult preVisitDirectory(final Path dir,
+												final BasicFileAttributes attrs) throws IOException {
+
+											currentTarget = Paths.get(gameDir + File.separatorChar + "config")
+													.resolve(jarPath.relativize(dir).toString());
+											Files.createDirectories(currentTarget);
+
+											return FileVisitResult.CONTINUE;
+										}
+
+										@Override
+										public FileVisitResult visitFile(final Path file,
+												final BasicFileAttributes attrs) throws IOException {
+
+											final Path target = Paths.get(gameDir + File.separatorChar + "config")
+													.resolve(jarPath.relativize(file).toString());
+
+											if (!(new File(target.toUri())).exists()) { // NOPMD by heiko on 03.02.23,
+																						// 13:07
+												Files.copy(file,
+														Paths.get(gameDir + File.separatorChar + "config")
+																.resolve(jarPath.relativize(file).toString()),
+														StandardCopyOption.REPLACE_EXISTING);
+											} else {
+												appendDetail(target.toString()
+														+ " übersprungen, da Datei bereits existiert");
+											}
+
+											return FileVisitResult.CONTINUE;
+										}
+									});
+
+								} catch (IOException e) {
+
+									error("Fehler beim Erzeugen der Konfiguration:" + e); // NOPMD by heiko on 03.02.23,
+																							// 13:06
+									hasError[0] = 1;
+									throw new CompletionException(e);
+
+								} finally {
+									installButton.setEnabled(hasError[0] == HAS_ERROR);
+									quitButton.setEnabled(true);
+								}
+
+							} catch (URISyntaxException e1) {
+								error("Fehler beim Erzeugen der Konfiguration:" + e); // NOPMD by heiko on 03.02.23,
+								// 13:06
+								hasError[0] = 1;
+								throw new CompletionException(e1);
+
+							} finally {
+								installButton.setEnabled(hasError[0] == HAS_ERROR);
+								quitButton.setEnabled(true);
+							}
+
+							currentProgress.setValue(currentProgress.getValue() + 1);
 
 							if (hasError[0] == HAS_ERROR) {
 								installButton.setEnabled(true);

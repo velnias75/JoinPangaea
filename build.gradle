@@ -35,6 +35,14 @@ processResources {
 	filesMatching("api.json") {
 		expand "apiKey": CurseforgeAPIKey
 	}
+	
+	exclude('config/worldedit')
+	exclude('config/.puzzle_cache')
+	exclude('config/physicsmod')
+	exclude('config/thief')
+	exclude('config/replaymod*')
+	exclude('config/litematica/')
+	exclude('config/minihud/')
 }
 
 shadowJar {
