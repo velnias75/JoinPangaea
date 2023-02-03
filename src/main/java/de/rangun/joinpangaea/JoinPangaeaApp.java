@@ -521,6 +521,21 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 										}
 									});
 
+									final Path sources[] = {
+											Paths.get(getMinecraftDir() + File.separatorChar + "servers.dat"),
+											Paths.get(getMinecraftDir() + File.separatorChar + "options.txt") };
+
+									for (final Path source : sources) {
+
+										final Path target = Paths.get(gameDir).resolve(source.getFileName());
+
+										if (!(new File(target.toUri())).exists()) { // NOPMD by heiko on 03.02.23, 13:50
+											Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+										} else {
+											appendDetail(target + " übersprungen, da Datei bereits existiert");
+										}
+									}
+
 								} catch (IOException e) {
 
 									error("Fehler beim Erzeugen der Konfiguration:" + e); // NOPMD by heiko on 03.02.23,
