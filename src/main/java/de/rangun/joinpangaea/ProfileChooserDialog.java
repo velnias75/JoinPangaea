@@ -42,7 +42,7 @@ import de.rangun.joinpangaea.JoinPangaeaApp.Profile;
  * @author heiko
  *
  */
-public class ProfileChooserDialog extends JDialog {
+public final class ProfileChooserDialog extends JDialog {
 
 	private static final long serialVersionUID = 5567131533567172406L;
 

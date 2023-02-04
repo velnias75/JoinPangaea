@@ -35,7 +35,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -74,6 +77,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -231,9 +235,10 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 					error("Kann " + launcherProfiles.getPath() + " nicht öffnen."); // NOPMD by heiko on 03.02.23, 04:27
 				}
 
-			} catch (IOException | ApiResponseException e) {
+			} catch (Throwable e) { // NOPMD by heiko on 04.02.23, 00:52
 				error(e);
 				throw new CompletionException(e);
+
 			}
 
 			appendDetail(Integer.toString(modList.size()) + " Mods gefunden.\n");
@@ -251,7 +256,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 		currentDetail.setCaretPosition(currentDetail.getDocument().getLength());
 	}
 
-	private void error(final Exception e) { // NOPMD by heiko on 03.02.23, 04:33
+	private void error(final Throwable e) { // NOPMD by heiko on 03.02.23, 04:33
 		error(e.getLocalizedMessage()); // NOPMD by heiko on 03.02.23, 04:27
 	}
 
@@ -610,31 +615,70 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 		mainWindow.setLocationRelativeTo(null);
 	}
 
-	private List<URL> getModDownloadURLList(final Manifest manifest)
-			throws IOException, ApiResponseException, ProtocolException {
+	private List<URL> getModDownloadURLList(final Manifest manifest) throws Throwable {
 
-		final List<URL> urls = new ArrayList<>();
+		final List<URL> urls = new ArrayList<>(100);
 
-		manifest.files.forEach(file -> {
-
-			if (!file.isJsonNull()) {
+		try {
+			manifest.files.forEach(file -> {
 
 				URL url = null;
 
-				try {
-					url = Api.getInstance().getURLForMod(file.getAsJsonObject().get("projectID").getAsInt(),
-							file.getAsJsonObject().get("fileID").getAsInt());
-				} catch (IOException | ApiResponseException e1) {
+				if (!file.isJsonNull()) {
+
+					try {
+						url = getSingleModURL(file, "projectID", "fileID");
+					} catch (IOException | ApiResponseException e) {
+						throw new RuntimeException(e); // NOPMD by heiko on 04.02.23, 00:52
+					}
 				}
 
 				if (url != null) {
 					urls.add(url);
 				}
+			});
+
+			try (Reader extraModsReader = new InputStreamReader(
+					JoinPangaeaApp.class.getResourceAsStream(("/extra-mods.json")))) {
+
+				JsonParser.parseReader(extraModsReader).getAsJsonObject().get("extra-mods").getAsJsonArray()
+						.forEach(extra -> {
+
+							try {
+
+								urls.add(getSingleModURL(extra, "modId", "fileId"));
+
+								if (extra.getAsJsonObject().has("replaces")) {
+
+									final URL replaceURL = getSingleModURL(
+											extra.getAsJsonObject().get("replaces").getAsJsonObject(), "modId",
+											"fileId");
+
+									if (urls.contains(replaceURL)) {
+										urls.remove(replaceURL);
+									}
+								}
+
+							} catch (IOException | ApiResponseException e) {
+								throw new RuntimeException(e); // NOPMD by heiko on 04.02.23, 00:52
+							}
+						});
 			}
 
-		});
+		} catch (RuntimeException e) { // NOPMD by heiko on 04.02.23, 00:52
+			if(e.getCause() != null) {
+				throw e.getCause();
+			}
+		}
 
 		return urls;
+	}
+
+	private URL getSingleModURL(final JsonElement json, final String modId, final String fileId)
+			throws MalformedURLException, IOException, ApiResponseException {
+
+		return Api.getInstance().getURLForMod(json.getAsJsonObject().get(modId).getAsInt(),
+				json.getAsJsonObject().get(fileId).getAsInt());
 	}
 
 	private Manifest readManifest(final URL zipURL) throws IOException, ApiResponseException, ProtocolException {

@@ -43,6 +43,7 @@ processResources {
 	exclude('config/replaymod*')
 	exclude('config/litematica/')
 	exclude('config/minihud/')
+	exclude('config/voxelmap.properties')
 }
 
 shadowJar {
