@@ -666,7 +666,8 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 			}
 
 		} catch (RuntimeException e) { // NOPMD by heiko on 04.02.23, 00:52
-			if(e.getCause() != null) {
+
+			if (e.getCause() != null) {
 				throw e.getCause();
 			}
 		}

@@ -44,6 +44,11 @@ processResources {
 	exclude('config/litematica/')
 	exclude('config/minihud/')
 	exclude('config/voxelmap.properties')
+	exclude('config/atmosfera.json')
+	exclude('config/charmonium.toml*')
+	exclude('config/inspecio.json')
+	exclude('config/panda_crossing.json')
+	exclude('config/worldeditcui.config.json')
 }
 
 shadowJar {
