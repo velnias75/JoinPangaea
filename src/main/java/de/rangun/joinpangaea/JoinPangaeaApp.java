@@ -108,6 +108,9 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 	private List<URL> modList;
 	private final List<Profile> validProfiles = new ArrayList<>();
 
+	private static String host = "pangaea.rangun.de";
+	private static int port = 25_565;
+
 	private final static class Manifest {
 
 		/* default */ final JsonObject minecraft;
@@ -143,6 +146,18 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 	 */
 	public static void main(final String[] args) {
 
+		if (args.length > 0) {
+
+			final int portIdx = args[0].lastIndexOf(':');
+
+			if (portIdx != -1) { // NOPMD by heiko on 04.02.23, 13:19
+				host = args[0].substring(0, portIdx);
+				port = Integer.parseInt(args[0].substring(portIdx + 1));
+			} else {
+				host = args[0];
+			}
+		}
+
 		EventQueue.invokeLater(new Runnable() {
 
 			@Override
@@ -175,7 +190,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 
 				appendDetail("Frage Pangäa nach der Minecraft-Version …");
 
-				final MineStat mineStat = new MineStat("pangaea.rangun.de", 25_565);
+				final MineStat mineStat = new MineStat(host, port);
 
 				currentProgress.setValue(1);
 
