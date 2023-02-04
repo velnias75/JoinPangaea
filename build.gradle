@@ -52,6 +52,16 @@ processResources {
 }
 
 shadowJar {
+
+	dependsOn distZip
+	dependsOn distTar
+
+    archiveClassifier.set('')
+    
+    relocate 'com.google.gson', 'de.rangun.joinpangaea.shadowed.com.google.gson'
+
+    exclude 'META-INF/**'
+    
     minimize()
 }
 
