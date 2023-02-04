@@ -39,8 +39,9 @@ import com.google.gson.JsonParser;
  */
 public final class Api { // NOPMD by heiko on 03.02.23, 03:46
 
+	public final static int OK_RESPONSE = 200;
+
 	private final static String ENDPOINT = "https://api.curseforge.com";
-	private final static int OK_RESPONSE = 200;
 
 	private static Api instance;
 	private String apiKey;

@@ -353,7 +353,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 		installPanel.setLayout(gbl_installPanel);
 
 		currentActionLabel = new JLabel();
-		final GridBagConstraints gbc_currentActionLabel = new GridBagConstraints();
+		final GridBagConstraints gbc_currentActionLabel = new GridBagConstraints(); // NOPMD by heiko on 04.02.23, 11:05
 		gbc_currentActionLabel.insets = new Insets(5, 5, 5, 5);
 
 		gbc_currentActionLabel.gridx = 0;
@@ -365,7 +365,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 
 		currentProgress = new JProgressBar();
 		currentProgress.setToolTipText("Fortschritt …");
-		final GridBagConstraints gbc_currentProgress = new GridBagConstraints();
+		final GridBagConstraints gbc_currentProgress = new GridBagConstraints(); // NOPMD by heiko on 04.02.23, 11:05
 		gbc_currentProgress.insets = new Insets(5, 5, 5, 5);
 
 		gbc_currentProgress.gridx = 0;
@@ -649,8 +649,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 				}
 			});
 
-			try (Reader extraModsReader = new InputStreamReader(
-					JoinPangaeaApp.class.getResourceAsStream(("/extra-mods.json")))) {
+			try (Reader extraModsReader = getExtraModsJson()) {
 
 				JsonParser.parseReader(extraModsReader).getAsJsonObject().get("extra-mods").getAsJsonArray()
 						.forEach(extra -> {
@@ -693,6 +692,30 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 				json.getAsJsonObject().get(fileId).getAsInt());
 	}
 
+	private Reader getExtraModsJson() throws IOException {
+
+		InputStreamReader reader;
+
+		final URL url = new URL(
+				"https://raw.githubusercontent.com/velnias75/JoinPangaea/master/src/main/resources/extra-mods.json");
+
+		final HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+		con.setRequestMethod("GET");
+
+		if (con.getResponseCode() == Api.OK_RESPONSE) {
+
+			appendDetail("Hole Liste der zusätzlichen Mods …");
+			reader = new InputStreamReader(con.getInputStream());
+
+		} else {
+			reader = new InputStreamReader(JoinPangaeaApp.class.getResourceAsStream(("/extra-mods.json")));
+		}
+
+		return reader;
+
+	}
+
 	private Manifest readManifest(final URL zipURL) throws IOException, ApiResponseException, ProtocolException {
 
 		final HttpURLConnection con = (HttpURLConnection) zipURL.openConnection();
@@ -727,10 +750,10 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 				stringBuilder.append((char) b.byteValue());
 			}
 
-			final JsonObject jsonManifest1 = JsonParser.parseString(stringBuilder.toString()).getAsJsonObject();
+			final JsonObject jsonManifest = JsonParser.parseString(stringBuilder.toString()).getAsJsonObject();
 
-			return new Manifest(jsonManifest1.get("minecraft").getAsJsonObject(),
-					jsonManifest1.get("files").getAsJsonArray());
+			return new Manifest(jsonManifest.get("minecraft").getAsJsonObject(),
+					jsonManifest.get("files").getAsJsonArray());
 		}
 	}
 
