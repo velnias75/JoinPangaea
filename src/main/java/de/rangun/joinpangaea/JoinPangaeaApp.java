@@ -111,6 +111,8 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 	private static String host = "pangaea.rangun.de";
 	private static int port = 25_565;
 
+	private static boolean useGitHubExtraMods = true; // NOPMD by heiko on 04.02.23, 14:23
+
 	private final static class Manifest {
 
 		/* default */ final JsonObject minecraft;
@@ -156,6 +158,9 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 			} else {
 				host = args[0];
 			}
+
+			useGitHubExtraMods = false;
+
 		}
 
 		EventQueue.invokeLater(new Runnable() {
@@ -718,7 +723,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 
 		con.setRequestMethod("GET");
 
-		if (con.getResponseCode() == Api.OK_RESPONSE) {
+		if (useGitHubExtraMods && con.getResponseCode() == Api.OK_RESPONSE) {
 
 			appendDetail("Hole Liste der zusätzlichen Mods …");
 			reader = new InputStreamReader(con.getInputStream());
