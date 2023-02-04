@@ -82,6 +82,7 @@ import com.google.gson.JsonParser;
 
 import de.rangun.joinpangaea.curseforge.Api;
 import de.rangun.joinpangaea.curseforge.ApiResponseException;
+import me.dilley.MineStat;
 
 /**
  * @author heiko
@@ -91,8 +92,6 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 
 	private final static Image APPLOGO = Toolkit.getDefaultToolkit()
 			.getImage(JoinPangaeaApp.class.getResource("/server-icon.png"));
-
-	private final static String MC_VERSION = "1.19.2";
 
 	private final static int ONLY_ONE_PROFILE = 1;
 	private final static int HAS_ERROR = 1;
@@ -161,78 +160,94 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 	/**
 	 * Create the application.
 	 */
-	public JoinPangaeaApp() {
+	public JoinPangaeaApp() { // NOPMD by heiko on 04.02.23, 09:05
 
 		initialize();
 
 		currentActionLabel.setText("Abholen der Mod-Liste …");
 		currentProgress.setMinimum(0);
-		currentProgress.setMaximum(4);
+		currentProgress.setMaximum(5);
 		currentProgress.setValue(0);
 
 		CompletableFuture.supplyAsync(() -> {
 
 			try {
 
-				appendDetail("Lade Manifest für Minecraft-Version " + MC_VERSION + " herunter …");
+				appendDetail("Frage Pangäa nach der Minecraft-Version …");
 
-				final URL manifestURL = Api.getInstance().getLatestFileFor(MC_VERSION);
+				final MineStat mineStat = new MineStat("pangaea.rangun.de", 25_565);
+
 				currentProgress.setValue(1);
 
-				appendDetail("Analysiere das Manifest …");
+				if (mineStat.isServerUp()) {
 
-				final Manifest manifest = readManifest(manifestURL);
-				currentProgress.setValue(2);
+					final String mc_version = mineStat.getVersion()
+							.substring(mineStat.getVersion().lastIndexOf(' ') + 1);
 
-				final File launcherProfiles = new File(
-						getMinecraftDir() + File.separatorChar + "launcher_profiles.json");
+					appendDetail("Lade Manifest für Minecraft-Version " + mc_version + " herunter …");
 
-				if (launcherProfiles.exists() && launcherProfiles.isFile()) {
+					final URL manifestURL = Api.getInstance().getLatestFileFor(mc_version);
+					currentProgress.setValue(2);
 
-					appendDetail("\nErmittle geeignete Profile …");
+					appendDetail("Analysiere das Manifest …");
 
-					final JsonObject profiles = JsonParser.parseReader(new FileReader(launcherProfiles)) // NOPMD by
-																											// heiko on
-																											// 03.02.23,
-																											// 04:44
-							.getAsJsonObject().get("profiles").getAsJsonObject();
-
-					profiles.asMap().forEach((id, entry) -> {
-
-						final JsonObject jsonEntry = entry.getAsJsonObject();
-						final String lastVersionId = jsonEntry.get("lastVersionId").getAsString();
-
-						if (lastVersionId.contains(manifest.minecraft.get("version").getAsString())
-								&& lastVersionId.contains("fabric")
-								&& lastVersionId.contains(manifest.minecraft.get("modLoaders").getAsJsonArray().asList()
-										.get(0).getAsJsonObject().get("id").getAsString().split("\\-")[1])
-								&& jsonEntry.has("gameDir")) {
-
-							final Profile profile = new Profile(id, jsonEntry.get("name").getAsString(),
-									jsonEntry.get("gameDir").getAsString());
-
-							validProfiles.add(profile);
-
-							appendDetail("Geeignetes Profil:\n  Name = " + profile.name + "\n  Spielverzeichnis = "
-									+ profile.gameDir);
-						}
-					});
-
+					final Manifest manifest = readManifest(manifestURL);
 					currentProgress.setValue(3);
 
-					if (!validProfiles.isEmpty()) { // NOPMD by heiko on 03.02.23, 04:31
+					final File launcherProfiles = new File(
+							getMinecraftDir() + File.separatorChar + "launcher_profiles.json");
 
-						appendDetail("\nErmittle Mods zum downloaden …");
+					if (launcherProfiles.exists() && launcherProfiles.isFile()) {
 
-						modList = getModDownloadURLList(manifest);
+						appendDetail("\nErmittle geeignete Profile …");
+
+						final JsonObject profiles = JsonParser.parseReader(new FileReader(launcherProfiles)) // NOPMD by
+																												// heiko
+																												// on
+																												// 03.02.23,
+																												// 04:44
+								.getAsJsonObject().get("profiles").getAsJsonObject();
+
+						profiles.asMap().forEach((id, entry) -> {
+
+							final JsonObject jsonEntry = entry.getAsJsonObject();
+							final String lastVersionId = jsonEntry.get("lastVersionId").getAsString();
+
+							if (lastVersionId.contains(manifest.minecraft.get("version").getAsString())
+									&& lastVersionId.contains("fabric")
+									&& lastVersionId.contains(manifest.minecraft.get("modLoaders").getAsJsonArray()
+											.asList().get(0).getAsJsonObject().get("id").getAsString().split("\\-")[1])
+									&& jsonEntry.has("gameDir")) {
+
+								final Profile profile = new Profile(id, jsonEntry.get("name").getAsString(),
+										jsonEntry.get("gameDir").getAsString());
+
+								validProfiles.add(profile);
+
+								appendDetail("Geeignetes Profil:\n  Name = " + profile.name + "\n  Spielverzeichnis = "
+										+ profile.gameDir);
+							}
+						});
+
 						currentProgress.setValue(4);
 
-					} else {
-						error("Kein geeignetes Profil gefunden.");
-					}
+						if (!validProfiles.isEmpty()) { // NOPMD by heiko on 03.02.23, 04:31
 
+							appendDetail("\nErmittle Mods zum downloaden …");
+
+							modList = getModDownloadURLList(manifest);
+							currentProgress.setValue(4);
+
+						} else {
+							error("Kein geeignetes Profil gefunden.");
+						}
+
+					} else {
+						error("Kann " + launcherProfiles.getPath() + " nicht öffnen."); // NOPMD by heiko on 03.02.23,
+																						// 04:27
+					}
 				} else {
-					error("Kann " + launcherProfiles.getPath() + " nicht öffnen."); // NOPMD by heiko on 03.02.23, 04:27
+					error("\nPangäa ist derzeit Offline. Versuche es später nochmals.");
 				}
 
 			} catch (Throwable e) { // NOPMD by heiko on 04.02.23, 00:52

@@ -2,6 +2,7 @@ plugins {
 	id 'java'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'edu.sc.seis.launch4j' version '2.5.4'
 }
 
 apply plugin: 'java'
@@ -12,6 +13,11 @@ apply from: 'private.gradle'
 repositories {
 	mavenLocal()	
 	mavenCentral()
+}
+
+launch4j {
+  mainClassName = 'de.rangun.joinpangaea.JoinPangaeaApp'
+  icon = "${projectDir}/pangaea.icon"
 }
 
 application {
@@ -26,7 +32,14 @@ java {
 
 dependencies {
 	implementation "com.google.code.gson:gson:${project.gson_version}"
+	
+	implementation("io.github.fragland:MineStat:${project.minestat_version}") {
+		exclude(group: "junit")
+		exclude module: "junit"
+	}
+	
 	shadow("com.google.code.gson:gson:${project.gson_version}");
+	shadow("io.github.fragland:MineStat:${project.minestat_version}")
 }
 
 processResources {
@@ -59,6 +72,7 @@ shadowJar {
     archiveClassifier.set('')
     
     relocate 'com.google.gson', 'de.rangun.joinpangaea.shadowed.com.google.gson'
+    relocate 'me.dilley', 'de.rangun.joinpangaea.shadowed.me.dilley'
 
     exclude 'META-INF/**'
     
