@@ -3,47 +3,47 @@
 		{
 			"name": "Xaero's Minimap",
 			"modId": 263420,
-			"fileId": 4338622
+			"fileId": 4338624
 		},
 		{
 			"name": "Xaero's World Map",
 			"modId": 317780,
-			"fileId": 4338634
+			"fileId": 4338636
 		},
 		{
 			"name": "MaLiLib",
 			"modId": 303119,
-			"fileId": 3923052
+			"fileId": 4147598
 		},
 		{
 			"name": "Litematica",
 			"modId": 308892,
-			"fileId": 4259743
+			"fileId": 4259746
 		},
 		{
 			"name": "MiniHUD",
 			"modId": 244260,
-			"fileId": 3923228
+			"fileId": 4160116
 		},
 		{
 			"name": "CraftPresence",
 			"modId": 297038,
-			"fileId": 4121604
+			"fileId": 4147121
 		},
 		{
 			"name": "ShulkerBoxTooltip",
 			"modId": 315811,
-			"fileId": 4054090
+			"fileId": 4216174
 		},
 		{
 			"name": "ViaFabric",
 			"modId": 391298,
-			"fileId": 4027948
+			"fileId": 4366060
 		},
 		{
 			"name": "Cull Leaves",
 			"modId": 423254,
-			"fileId": 4103096,
+			"fileId": 4174839,
 			"replaces": {
 				"name": "Cull Less Leaves",
 				"modId": 619718,

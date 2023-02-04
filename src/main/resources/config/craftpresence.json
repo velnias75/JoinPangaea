@@ -1,7 +1,7 @@
 {
   "_README": "https://gitlab.com/CDAGaming/CraftPresence/-/wikis/home",
   "_schemaVersion": 1,
-  "_lastMCVersionId": 760,
+  "_lastMCVersionId": 761,
   "generalSettings": {
     "detectCurseManifest": false,
     "detectMultiMCManifest": false,
@@ -150,16 +150,7 @@
     },
     "singleplayerData": {
       "textOverride": "Playing Singleplayer"
-    },
-    "packPlaceholderMessage": "&name&",
-    "outerPlayerPlaceholderMessage": "As &name&",
-    "innerPlayerPlaceholderMessage": "(&health&)",
-    "playerCoordinatePlaceholderMessage": "At &xPosition&, &zPosition&",
-    "playerHealthPlaceholderMessage": "Health: &current&/&max&",
-    "playerAmountPlaceholderMessage": "&current& / &max& Players",
-    "playerItemsPlaceholderMessage": "Items: &main&",
-    "worldPlaceholderMessage": "On &worldname&",
-    "modsPlaceholderMessage": "&modcount& Mod(s)"
+    }
   },
   "advancedSettings": {
     "enableCommands": true,
@@ -174,7 +165,6 @@
     "roundSize": 3,
     "includeExtraGuiClasses": false,
     "allowPlaceholderPreviews": false,
-    "allowPlaceholderOperators": true,
     "guiSettings": {
       "fallbackGuiIcon": "unknown",
       "guiData": {
@@ -238,6 +228,18 @@
       "visit.uncensoredlibrary.com": "https://api.mcsrvstat.us/icon/visit.uncensoredlibrary.com",
       "88.99.93.36": "https://api.mcsrvstat.us/icon/88.99.93.36",
       "localhost": "https://api.mcsrvstat.us/icon/localhost"
+    },
+    "dynamicVariables": {
+      "default": "Example Text",
+      "mods": "{general.mods} Mod(s)",
+      "player_info_coordinate": "At {player.position.x}, {player.position.z}",
+      "players": "{server.players.current} / {server.players.max} Players",
+      "player_info_in": "({custom.player_info.health})",
+      "player_info_items": "Items: {item.main_hand.message}",
+      "player_info_out": "As {player.name}",
+      "player_info_health": "Health: {player.health.current}/{player.health.max}",
+      "world_info": "On {world.name}",
+      "pack": "{pack.name}"
     }
   }
 }
