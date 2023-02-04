@@ -229,8 +229,9 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 						currentProgress.setValue(4);
 
 					} else {
-						error("Kein nutzbares Profil gefunden.");
+						error("Kein geeignetes Profil gefunden.");
 					}
+
 				} else {
 					error("Kann " + launcherProfiles.getPath() + " nicht öffnen."); // NOPMD by heiko on 03.02.23, 04:27
 				}
@@ -245,6 +246,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 
 			currentProgress.setValue(0);
 			currentActionLabel.setText("Bereit zur Installation.");
+			currentActionLabel.setForeground(new Color(0, 128, 0));
 			installButton.setEnabled(true);
 
 			return modList;
@@ -397,6 +399,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 			public void actionPerformed(final ActionEvent e) { // NOPMD by heiko on 03.02.23, 04:33
 
 				installButton.setEnabled(false);
+				currentActionLabel.setForeground(Color.BLACK);
 
 				installingFuture = CompletableFuture.runAsync(new Runnable() {
 
