@@ -72,7 +72,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 
@@ -329,12 +328,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 		mainWindow.getContentPane().add(mainPanel);
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
 
-		final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-		mainPanel.add(tabbedPane);
-
 		final JPanel installPanel = new JPanel();
-		tabbedPane.addTab("Installation", null, installPanel, null);
 		final GridBagLayout gbl_installPanel = new GridBagLayout();
 		gbl_installPanel.rowWeights = new double[] { 0.0, 0.0, 1.0, 0.0 };
 		gbl_installPanel.columnWeights = new double[] { 0.0 };
@@ -611,8 +605,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 		quitButton.setMnemonic('B');
 		panel.add(quitButton);
 
-		final JPanel settingsPanel = new JPanel();
-		tabbedPane.addTab("Einstellungen", null, settingsPanel, null);
+		mainPanel.add(installPanel);
 
 		mainWindow.pack();
 		mainWindow.setLocationRelativeTo(null);
