@@ -51,6 +51,14 @@ public final class ProfileChooserDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 
+	private final List<ProfileWrapper> wrappedProfiles = new ArrayList<>();
+
+	@SuppressWarnings("rawtypes")
+	private final JComboBox comboBox;
+
+	/* default */ String gameDir;
+	/* default */ Entry<String, JsonObject> selectedEntry;
+
 	private final static class ProfileWrapper {
 
 		/* default */ final Entry<String, JsonObject> entry;
@@ -64,14 +72,6 @@ public final class ProfileChooserDialog extends JDialog {
 			return entry.getValue().get("name").getAsString();
 		}
 	}
-
-	private final List<ProfileWrapper> wrappedProfiles = new ArrayList<>();
-
-	@SuppressWarnings("rawtypes")
-	private final JComboBox comboBox;
-
-	/* default */ String gameDir;
-	/* default */ Entry<String, JsonObject> selectedEntry;
 
 	/**
 	 * Create the dialog.

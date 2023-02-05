@@ -116,7 +116,7 @@ public final class MCLauncherProfiles {
 
 		final JsonObject icon = profilesMap.get(identifier);
 
-		if (!icon.get("icon").getAsString().contains("base64")) {
+		if (!(icon.has("icon") && icon.get("icon").getAsString().contains("base64"))) {
 
 			try (InputStream inputStream = MCLauncherProfiles.class.getResourceAsStream("/server-icon.png")) {
 
