@@ -33,7 +33,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -58,9 +57,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -82,6 +83,8 @@ import com.google.gson.JsonParser;
 
 import de.rangun.joinpangaea.curseforge.Api;
 import de.rangun.joinpangaea.curseforge.ApiResponseException;
+import de.rangun.joinpangaea.launcher.MCLauncherProfiles;
+import de.rangun.joinpangaea.utils.Utils;
 import me.dilley.MineStat;
 
 /**
@@ -106,7 +109,7 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 	private JButton quitButton;
 
 	private List<URL> modList;
-	private final List<Profile> validProfiles = new ArrayList<>();
+	private final Map<String, JsonObject> validProfiles = new ConcurrentHashMap<>();
 
 	private static String host = "pangaea.rangun.de";
 	private static int port = 25_565;
@@ -121,25 +124,6 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 		public Manifest(final JsonObject minecraft, final JsonArray files) {
 			this.minecraft = minecraft;
 			this.files = files;
-		}
-	}
-
-	/* default */ final static class Profile {
-
-		/* default */ final String identifier;
-		/* default */ final String name;
-		/* default */ final String gameDir;
-
-		public Profile(final String identifier, final String name, final String gameDir) {
-
-			this.identifier = identifier;
-			this.name = name;
-			this.gameDir = gameDir;
-		}
-
-		@Override
-		public String toString() {
-			return name;
 		}
 	}
 
@@ -214,38 +198,27 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 					final Manifest manifest = readManifest(manifestURL);
 					currentProgress.setValue(3);
 
-					final File launcherProfiles = new File(
-							getMinecraftDir() + File.separatorChar + "launcher_profiles.json");
+					final MCLauncherProfiles launcherProfiles = MCLauncherProfiles.getInstance();
 
-					if (launcherProfiles.exists() && launcherProfiles.isFile()) {
+					if (launcherProfiles.isExisting()) {
 
 						appendDetail("\nErmittle geeignete Profile …");
 
-						final JsonObject profiles = JsonParser.parseReader(new FileReader(launcherProfiles)) // NOPMD by
-																												// heiko
-																												// on
-																												// 03.02.23,
-																												// 04:44
-								.getAsJsonObject().get("profiles").getAsJsonObject();
+						launcherProfiles.getProfiles().entrySet().forEach((entry) -> {
 
-						profiles.asMap().forEach((id, entry) -> {
-
-							final JsonObject jsonEntry = entry.getAsJsonObject();
-							final String lastVersionId = jsonEntry.get("lastVersionId").getAsString();
+							final String lastVersionId = entry.getValue().get("lastVersionId").getAsString();
 
 							if (lastVersionId.contains(manifest.minecraft.get("version").getAsString())
 									&& lastVersionId.contains("fabric")
 									&& lastVersionId.contains(manifest.minecraft.get("modLoaders").getAsJsonArray()
 											.asList().get(0).getAsJsonObject().get("id").getAsString().split("\\-")[1])
-									&& jsonEntry.has("gameDir")) {
+									&& entry.getValue().has("gameDir")) {
 
-								final Profile profile = new Profile(id, jsonEntry.get("name").getAsString(),
-										jsonEntry.get("gameDir").getAsString());
+								validProfiles.put(entry.getKey(), entry.getValue());
 
-								validProfiles.add(profile);
-
-								appendDetail("Geeignetes Profil:\n  Name = " + profile.name + "\n  Spielverzeichnis = "
-										+ profile.gameDir);
+								appendDetail("Geeignetes Profil:\n  Name = "
+										+ entry.getValue().get("name").getAsString() + "\n  Spielverzeichnis = "
+										+ entry.getValue().get("gameDir").getAsString());
 							}
 						});
 
@@ -440,18 +413,20 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 						final int[] hasError = { 0 }; // NOPMD by heiko on 03.02.23, 04:26
 
 						String gameDir;
+						Entry<String, JsonObject> selectedEntry = null;
 
 						currentActionLabel.setText("Wähle in zu installierendes Profil aus …");
 
 						if (validProfiles.size() == ONLY_ONE_PROFILE) {
-							gameDir = validProfiles.get(0).gameDir;
+							gameDir = validProfiles.values().iterator().next().get("gameDir").getAsString();
 						} else {
 
 							final ProfileChooserDialog profileChooserDlg = new ProfileChooserDialog(mainWindow,
 									validProfiles);
-							profileChooserDlg.setVisible(true);
 
+							profileChooserDlg.setVisible(true);
 							gameDir = profileChooserDlg.gameDir;
+							selectedEntry = profileChooserDlg.selectedEntry;
 						}
 
 						if (gameDir != null) {
@@ -460,6 +435,14 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 
 							currentProgress.setMinimum(0);
 							currentProgress.setMaximum(modList.size() + 1);
+
+							if (selectedEntry != null) {
+
+								try {
+									MCLauncherProfiles.getInstance().setIcon(selectedEntry.getKey());
+								} catch (IOException e2) {
+								}
+							}
 
 							modList.forEach(mod -> {
 
@@ -559,8 +542,8 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 									});
 
 									final Path sources[] = {
-											Paths.get(getMinecraftDir() + File.separatorChar + "servers.dat"),
-											Paths.get(getMinecraftDir() + File.separatorChar + "options.txt") };
+											Paths.get(Utils.getMinecraftDir() + File.separatorChar + "servers.dat"),
+											Paths.get(Utils.getMinecraftDir() + File.separatorChar + "options.txt") };
 
 									for (final Path source : sources) {
 
@@ -777,17 +760,4 @@ public final class JoinPangaeaApp { // NOPMD by heiko on 03.02.23, 06:48
 		}
 	}
 
-	private String getMinecraftDir() {
-
-		final String OS = (System.getProperty("os.name")).toUpperCase(Locale.ROOT); // NOPMD by heiko on 03.02.23, 04:34
-		String dir;
-
-		if (OS.contains("WIN")) {
-			dir = System.getenv("AppData");
-		} else {
-			dir = System.getProperty("user.home");
-		}
-
-		return dir + File.separatorChar + ".minecraft";
-	}
 }

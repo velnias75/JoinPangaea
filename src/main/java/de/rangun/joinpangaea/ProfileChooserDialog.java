@@ -25,7 +25,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -36,7 +39,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import de.rangun.joinpangaea.JoinPangaeaApp.Profile;
+import com.google.gson.JsonObject;
 
 /**
  * @author heiko
@@ -48,18 +51,40 @@ public final class ProfileChooserDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 
+	private final static class ProfileWrapper {
+
+		/* default */ final Entry<String, JsonObject> entry;
+
+		public ProfileWrapper(final Entry<String, JsonObject> entry) {
+			this.entry = entry;
+		}
+
+		@Override
+		public String toString() {
+			return entry.getValue().get("name").getAsString();
+		}
+	}
+
+	private final List<ProfileWrapper> wrappedProfiles = new ArrayList<>();
+
 	@SuppressWarnings("rawtypes")
 	private final JComboBox comboBox;
 
 	/* default */ String gameDir;
+	/* default */ Entry<String, JsonObject> selectedEntry;
 
 	/**
 	 * Create the dialog.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ProfileChooserDialog(final JFrame parent, final List<Profile> validProfiles) {
+	public ProfileChooserDialog(final JFrame parent, final Map<String, JsonObject> profiles) {
 
 		super();
+
+		profiles.entrySet().forEach((entry) -> {
+			wrappedProfiles.add(new ProfileWrapper(entry));
+		});
+
 		setTitle("Wähle ein Profil …");
 
 		setResizable(false);
@@ -85,7 +110,7 @@ public final class ProfileChooserDialog extends JDialog {
 			lblNewLabel.setDisplayedMnemonic('P');
 			contentPanel.add(lblNewLabel);
 
-			comboBox = new JComboBox(validProfiles.toArray(new Profile[0]));
+			comboBox = new JComboBox(wrappedProfiles.toArray(new ProfileWrapper[0]));
 			comboBox.setSelectedIndex(0);
 			lblNewLabel.setLabelFor(comboBox);
 			contentPanel.add(comboBox);
@@ -105,7 +130,10 @@ public final class ProfileChooserDialog extends JDialog {
 				okButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(final ActionEvent e) { // NOPMD by heiko on 03.02.23, 04:11
-						gameDir = ((Profile) comboBox.getSelectedItem()).gameDir;
+
+						selectedEntry = ((ProfileWrapper) comboBox.getSelectedItem()).entry;
+						gameDir = selectedEntry.getValue().get("gameDir").getAsString();
+
 						dispose();
 					}
 				});
@@ -117,6 +145,7 @@ public final class ProfileChooserDialog extends JDialog {
 			{
 				final JButton cancelButton = new JButton("Abbrechen");
 				cancelButton.addActionListener(new ActionListener() {
+
 					@Override
 					public void actionPerformed(final ActionEvent e) { // NOPMD by heiko on 03.02.23, 04:11
 						dispose();
